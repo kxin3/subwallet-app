@@ -1,0 +1,17 @@
+@"
+# ─── Node / React ──────────────────────────
+node_modules/
+npm-debug.log*
+yarn.lock
+package-lock.json
+.env
+# ─── VS Code settings ─────────────────────
+.vscode/
+# ─── Build + coverage outputs ─────────────
+dist/
+build/
+coverage/
+# ─── OS clutter ───────────────────────────
+.DS_Store
+Thumbs.db
+"@ | Out-File -Encoding utf8 .gitignore -Force

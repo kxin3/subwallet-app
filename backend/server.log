@@ -1,0 +1,19 @@
+Starting server...
+Connecting to database...
+Setting up middleware...
+Attempting to start server on port 5000...
+✅ Server successfully running on port 5000
+🌐 API available at http://localhost:5000
+🔗 Frontend URL: http://localhost:3000
+MongoDB Connected: ac-ublak5r-shard-00-02.9rvtrca.mongodb.net
+Database connection established
+2025-07-10T15:40:27.520Z - POST /api/gmail/accounts/test123/scan
+🔍 SCAN REQUEST DETECTED: {
+  method: 'POST',
+  path: '/api/gmail/accounts/test123/scan',
+  params: {},
+  headers: 'Bearer token present'
+}
+🔐 Auth middleware error: jwt malformed
+🔐 Token (first 20 chars): invalid-token
+🔐 JWT_SECRET present: true
