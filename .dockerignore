@@ -15,3 +15,9 @@ README.md
 backend/node_modules
 frontend/node_modules
 frontend/build
+.cache
+.nyc_output
+coverage
+backend/server.log
+frontend/frontend.log
+.claude/
