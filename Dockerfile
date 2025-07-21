@@ -7,17 +7,15 @@ WORKDIR /app
 # Install system dependencies
 RUN apk add --no-cache curl
 
-# Copy package files
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
-
 # Install backend dependencies
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
-RUN npm ci --omit=dev --silent
+RUN npm install --production
 
 # Install frontend dependencies and build
+COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
-RUN npm ci --silent
+RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
@@ -26,7 +24,7 @@ WORKDIR /app
 COPY backend/ ./backend/
 
 # Copy built frontend to backend public folder
-RUN cp -r /app/frontend/build/* /app/backend/public/ 2>/dev/null || mkdir -p /app/backend/public
+RUN mkdir -p /app/backend/public && cp -r /app/frontend/build/* /app/backend/public/ 2>/dev/null || true
 
 # Expose port
 EXPOSE 5000
