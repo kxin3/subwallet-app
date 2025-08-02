@@ -1,6 +1,9 @@
 # SubWallet App Dockerfile
 FROM node:18-alpine
 
+# Build argument for API URL
+ARG REACT_APP_API_URL=https://subwallet-app-production-114a.up.railway.app/api
+
 # Install system dependencies
 RUN apk add --no-cache curl
 
@@ -21,6 +24,9 @@ RUN npm install
 
 # Copy frontend source code
 COPY frontend/ ./
+
+# Set production API URL for React build from build argument
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 # Build frontend
 RUN npm run build
