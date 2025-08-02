@@ -42,6 +42,10 @@ connectDB().then(() => {
 
 // Security middleware
 console.log('Setting up middleware...');
+
+// Trust proxy (required for Railway and other reverse proxies)
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
