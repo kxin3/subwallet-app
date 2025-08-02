@@ -1,30 +1,40 @@
-# Optimized Dockerfile for SubWallet App
+# SubWallet App Dockerfile
 FROM node:18-alpine
-
-# Set working directory
-WORKDIR /app
 
 # Install system dependencies
 RUN apk add --no-cache curl
 
-# Install backend dependencies
-COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install --production
+# Set working directory
+WORKDIR /app
 
-# Install frontend dependencies and build
+# Copy package.json files
+COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN npm install --only=production
+
+# Install frontend dependencies
 WORKDIR /app/frontend
 RUN npm install
+
+# Copy frontend source code
 COPY frontend/ ./
+
+# Build frontend
 RUN npm run build
 
-# Copy backend files
+# Copy backend source code
 WORKDIR /app
 COPY backend/ ./backend/
 
-# Copy built frontend to backend public folder
-RUN mkdir -p /app/backend/public && cp -r /app/frontend/build/* /app/backend/public/ 2>/dev/null || true
+# Create public directory and copy frontend build
+RUN mkdir -p /app/backend/public
+RUN cp -r /app/frontend/build/* /app/backend/public/ || echo "No build files to copy"
+
+# Set final working directory
+WORKDIR /app/backend
 
 # Expose port
 EXPOSE 5000
@@ -34,5 +44,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:5000/api/health || exit 1
 
 # Start the application
-WORKDIR /app/backend
 CMD ["node", "server.js"]
