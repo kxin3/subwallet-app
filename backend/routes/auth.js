@@ -7,18 +7,39 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
+  console.log('🔄 Registration attempt started');
+  console.log('📨 Request body:', { 
+    email: req.body?.email, 
+    name: req.body?.name, 
+    hasPassword: !!req.body?.password 
+  });
+  
   try {
     const { email, password, name } = req.body;
 
+    // Validate required fields
+    if (!email || !password || !name) {
+      console.log('❌ Missing required fields');
+      return res.status(400).json({ message: 'Email, password, and name are required' });
+    }
+
+    console.log('✅ Required fields provided');
+
     // Check if user already exists
+    console.log('🔍 Checking if user exists...');
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('❌ User already exists');
       return res.status(400).json({ message: 'User already exists' });
     }
+
+    console.log('✅ User does not exist, creating new user...');
 
     // Create new user
     const user = new User({ email, password, name });
     await user.save();
+
+    console.log('✅ User created successfully:', user._id);
 
     // Generate token
     const token = jwt.sign(
@@ -26,6 +47,8 @@ router.post('/register', async (req, res) => {
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '7d' }
     );
+
+    console.log('✅ JWT token generated');
 
     res.status(201).json({
       token,
@@ -39,7 +62,11 @@ router.post('/register', async (req, res) => {
         isGmailConnected: user.isGmailConnected || user.gmailAccounts?.length > 0
       }
     });
+
+    console.log('✅ Registration successful for:', email);
   } catch (error) {
+    console.error('❌ Registration error:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ message: 'Registration failed', error: error.message });
   }
 });
