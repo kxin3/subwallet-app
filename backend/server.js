@@ -11,14 +11,18 @@ const gmailRoutes = require('./routes/gmail');
 
 const app = express();
 
-console.log('Starting server...');
+console.log('🚀 Starting SubWallet server...');
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('Port:', process.env.PORT || 5000);
 
 // Connect to MongoDB
 console.log('Connecting to database...');
+console.log('MongoDB URI provided:', process.env.MONGODB_URI ? 'Yes' : 'No');
 connectDB().then(() => {
   console.log('Database connection established');
 }).catch(err => {
   console.error('Database connection failed:', err);
+  console.log('Server will continue without database connection');
 });
 
 // Security middleware
@@ -62,10 +66,12 @@ app.use('/api/gmail', gmailRoutes);
 
 // Health check endpoints
 app.get('/health', (req, res) => {
+  console.log('✅ Health check accessed at /health');
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/health', (req, res) => {
+  console.log('✅ Health check accessed at /api/health');
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
