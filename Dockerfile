@@ -29,9 +29,20 @@ RUN npm run build
 WORKDIR /app
 COPY backend/ ./backend/
 
+# Debug: Check if build directory exists and list contents
+RUN ls -la /app/frontend/
+RUN ls -la /app/frontend/build/ || echo "Build directory doesn't exist"
+
 # Create public directory and copy frontend build
 RUN mkdir -p /app/backend/public
-RUN cp -r /app/frontend/build/* /app/backend/public/ || echo "No build files to copy"
+RUN if [ -d "/app/frontend/build" ]; then \
+      echo "Copying build files..." && \
+      cp -r /app/frontend/build/* /app/backend/public/ && \
+      echo "Build files copied successfully" && \
+      ls -la /app/backend/public/; \
+    else \
+      echo "ERROR: Build directory not found!"; \
+    fi
 
 # Set final working directory
 WORKDIR /app/backend

@@ -16,6 +16,20 @@ console.log('🚀 Starting SubWallet server...');
 console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('Port:', process.env.PORT || 5000);
 
+// Debug: Check if public directory exists and list contents
+const fs = require('fs');
+const publicPath = path.join(__dirname, 'public');
+console.log('Checking public directory:', publicPath);
+if (fs.existsSync(publicPath)) {
+  console.log('✅ Public directory exists');
+  const files = fs.readdirSync(publicPath);
+  console.log('📁 Public directory contents:', files);
+  const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
+  console.log('📄 index.html exists:', indexExists);
+} else {
+  console.log('❌ Public directory does not exist!');
+}
+
 // Connect to MongoDB
 console.log('Connecting to database...');
 console.log('MongoDB URI provided:', process.env.MONGODB_URI ? 'Yes' : 'No');
