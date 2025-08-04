@@ -29,6 +29,8 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(null);
   const [maxAccounts, setMaxAccounts] = useState(3);
   const [canAddMore, setCanAddMore] = useState(true);
+  const [scanProgress, setScanProgress] = useState({ current: 0, total: 0, stage: '' });
+  const [abortController, setAbortController] = useState(null);
 
   useEffect(() => {
     loadAccounts();
@@ -89,13 +91,30 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
     }
   };
 
+  const stopScan = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setScanningAccountId(null);
+      setScanningAll(false);
+      setScanProgress({ current: 0, total: 0, stage: '' });
+      toast.info('Scan stopped');
+    }
+  };
+
   const handleScanAccount = async (accountId, accountEmail) => {
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     try {
       console.log('Frontend: Starting scan for account:', accountId, accountEmail);
       setScanningAccountId(accountId);
-      const results = await scanGmailAccount(accountId);
+      setScanProgress({ current: 1, total: 3, stage: 'Analyzing emails...' });
+      
+      const results = await scanGmailAccount(accountId, controller.signal);
       
       console.log('Frontend: Scan results:', results);
+      setScanProgress({ current: 3, total: 3, stage: 'Complete!' });
       
       if (results.detectedSubscriptions.length > 0) {
         toast.success(`Found ${results.detectedSubscriptions.length} subscription(s) in ${accountEmail}`);
@@ -104,6 +123,10 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
         toast.info(`No new subscriptions found in ${accountEmail}`);
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        return; // Scan was cancelled
+      }
+      
       console.error('Failed to scan Gmail account:', error);
       console.error('Error details:', error.response?.data);
       const errorMessage = error.response?.data?.message || 'Failed to scan Gmail account';
@@ -115,13 +138,23 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
       }
     } finally {
       setScanningAccountId(null);
+      setAbortController(null);
+      setScanProgress({ current: 0, total: 0, stage: '' });
     }
   };
 
   const handleScanAllAccounts = async () => {
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     try {
       setScanningAll(true);
-      const results = await scanAllGmailAccounts();
+      const connectedAccounts = accounts.filter(acc => acc.isConnected);
+      setScanProgress({ current: 0, total: connectedAccounts.length, stage: 'Starting scan...' });
+      
+      const results = await scanAllGmailAccounts(controller.signal);
+      
+      setScanProgress({ current: connectedAccounts.length, total: connectedAccounts.length, stage: 'Complete!' });
       
       if (results.detectedSubscriptions.length > 0) {
         toast.success(`Found ${results.detectedSubscriptions.length} subscription(s) across all accounts`);
@@ -133,6 +166,10 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
       // Update last scan dates
       loadAccounts();
     } catch (error) {
+      if (error.name === 'AbortError') {
+        return; // Scan was cancelled
+      }
+      
       console.error('Failed to scan all Gmail accounts:', error);
       const errorMessage = error.response?.data?.message || 'Failed to scan Gmail accounts';
       toast.error(errorMessage);
@@ -141,6 +178,8 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
       loadAccounts();
     } finally {
       setScanningAll(false);
+      setAbortController(null);
+      setScanProgress({ current: 0, total: 0, stage: '' });
     }
   };
 
@@ -188,11 +227,6 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-400 p-6">
-      <div className="mb-4 p-3 bg-blue-100 rounded-lg border border-blue-300">
-        <div className="text-sm font-medium text-blue-800">
-          🆕 NEW: Multiple Gmail Account Support! You can now connect up to 3 Gmail accounts.
-        </div>
-      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <Users className="h-6 w-6 text-blue-600 mr-3" />
@@ -227,6 +261,35 @@ const MultipleEmailManager = ({ onImportSuccess }) => {
           </button>
         </div>
       </div>
+
+      {/* Progress Bar */}
+      {(scanningAccountId || scanningAll) && scanProgress.total > 0 && (
+        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+              <span className="text-sm font-medium text-gray-700">{scanProgress.stage}</span>
+            </div>
+            <button
+              onClick={stopScan}
+              className="flex items-center gap-1 px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+            >
+              <XCircle className="h-4 w-4" />
+              Stop Scan
+            </button>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>Progress: {scanProgress.current}/{scanProgress.total}</span>
+            <span>{Math.round((scanProgress.current / scanProgress.total) * 100)}%</span>
+          </div>
+        </div>
+      )}
 
       {accounts.length === 0 ? (
         <div className="text-center py-8">

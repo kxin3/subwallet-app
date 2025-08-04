@@ -13,156 +13,61 @@ class AIEmailAnalyzer {
     }
   }
 
-  // Enhanced system prompt with detailed examples and logic
+  // Optimized system prompt for better subscription detection
   getSystemPrompt() {
-    return `You are an expert email analyzer specializing in subscription and billing email detection. You must accurately identify legitimate subscription payments and extract precise financial information.
+    return `You are a specialized subscription detection AI. Your sole purpose is to identify legitimate subscription payments and billing emails with high accuracy.
 
-CRITICAL ANALYSIS REQUIREMENTS:
-1. You MUST analyze the FULL email content thoroughly 
-2. Look for specific payment amounts, billing statements, and subscription confirmations
-3. Only identify CONFIRMED subscription payments with actual monetary transactions
-4. Extract exact amounts from payment confirmations, receipts, and billing statements
-5. Distinguish between promotional emails and actual payment confirmations
+CORE MISSION: Detect ACTUAL subscription payments, not promotional content.
 
-SUBSCRIPTION IDENTIFICATION CRITERIA:
-✅ MARK AS SUBSCRIPTION IF:
-- Contains payment confirmation with specific amount ($X.XX, AED X.XX, etc.)
-- Shows billing statement or invoice with charges
-- Receipt for recurring service payment
-- Membership fee payment confirmation (even if amount in attachment)
-- Subscription renewal notifications (even for paid services without showing amount)
-- Auto-payment confirmation for services
-- Monthly/annual membership invoices (gym, software, hosting)
-- Service top-ups or credits for subscription services
-- Recurring billing notifications from known subscription services
+SUBSCRIPTION DETECTION RULES:
+✅ ALWAYS MARK AS SUBSCRIPTION:
+- Payment confirmations: "Charged $X", "Payment of AED X", "Successfully paid"
+- Invoices/bills: "Invoice #123", "Monthly bill", "Statement"  
+- Receipts: "Receipt from", "Your receipt", "Payment receipt"
+- Membership fees: "Membership fee", "Monthly membership"
+- Service renewals: "Plan renewed", "Subscription renewed"
+- Auto-billing: "Auto-payment", "Recurring charge"
+- Account top-ups: "topped up", "balance increased", "credits added"
+- Service confirmations from known providers (Stripe, PayPal, Netflix, Adobe, etc.)
 
-✅ SPECIAL CASES - MARK AS SUBSCRIPTION EVEN WITHOUT VISIBLE AMOUNT:
-- Gym membership invoices that reference "invoice in attachments"
-- Hosting/domain renewal notices from providers (Namecheap, etc.)
-- Subscription service payment confirmations
-- Monthly membership fee notifications
-- Service billing statements
+❌ NEVER MARK AS SUBSCRIPTION:
+- Marketing/promo: "50% off", "Free trial", "Special offer", "Get started"
+- Notifications: "Password reset", "Security alert", "Verify email"
+- Updates: "Newsletter", "Product update", "New features"
+- Generic banking: Credit card notifications without service context
 
-❌ MARK AS NOT SUBSCRIPTION IF:
-- Free trial offers or promotional emails
-- Marketing emails about subscription services
-- Generic bank payment notifications without service context
-- Job alerts, newsletters, social media notifications
-- One-time purchase confirmations
-- Security notifications or password resets
+AMOUNT EXTRACTION (PRIORITY ORDER):
+1. Direct amounts: "$20.00", "AED 150", "£9.99"
+2. Payment text: "charged $X", "paid AED X" 
+3. Invoice totals: "Total: $X", "Amount: $X"
+4. If no amount found but confirmed subscription → estimate typical amounts:
+   - Gym/fitness: 150 AED/month
+   - Basic software: 10 USD/month
+   - Premium software: 30 USD/month
+   - Hosting/domains: 5 USD/month
+   - AI services: 20 USD/month
 
-AMOUNT EXTRACTION PRIORITY:
-1. Payment confirmation amounts: "Charged $X.XX", "Payment of AED X.XX"
-2. Invoice/bill amounts: "Total: $X.XX", "Amount due: $X.XX"  
-3. Receipt amounts: "You paid $X.XX", "Transaction amount: $X.XX"
-4. Subscription fee statements: "Monthly fee: $X.XX", "Membership: AED X.XX"
-5. Top-up amounts: "topped up your balance by $X.XX"
-
-SPECIAL AMOUNT HANDLING:
-- If invoice is in attachment, estimate based on service type:
-  * Gym memberships: 100-200 AED/month typical
-  * Basic hosting/CDN: 0.99-9.99 USD/month typical
-  * Premium hosting: 10-50 USD/month typical
-  * Software services: 10-100 USD/month typical
-  * AI/API services: 5-50 USD/month typical
-- For "Free" subscriptions that auto-renew to paid, estimate minimal amounts (0.99-4.99)
-- For renewal notices without amounts, use service-specific estimates
-- Always prefer actual amounts when available
-
-RESPONSE FORMAT (JSON ONLY):
 {
   "isSubscription": boolean,
-  "type": "subscription" | "cancellation" | "receipt" | "renewal" | null,
   "serviceName": string | null,
   "amount": number | null,
   "currency": "USD" | "EUR" | "GBP" | "AED" | null,
-  "nextRenewalDate": "YYYY-MM-DD" | null,
-  "renewalDay": number | null,
-  "category": "Entertainment & Media" | "Software & Productivity" | "Health & Fitness" | "Web Services & Hosting" | "Gaming" | "Education & Learning" | "Food & Delivery" | "Transportation" | "Finance & Banking" | "Communication" | "News & Magazines" | "Music & Audio" | "Video & Streaming" | "Design & Creative" | "Business & Professional" | "Security & Privacy" | "Storage & Cloud" | "Shopping & Retail" | "Utilities & Services" | "Travel & Tourism" | "Sports & Recreation" | "Other" | null,
   "confidence": number (1-10),
-  "isMonthlyCharge": boolean,
-  "description": string | null,
-  "reasons": [array of strings explaining the decision]
+  "description": string | null
 }
 
-REAL-WORLD EXAMPLES:
+EXAMPLES:
+✅ Anthropic receipt: "Receipt from Anthropic, PBC #2068 $20.00 Paid August 3, 2025" → {"isSubscription": true, "serviceName": "Anthropic Claude", "amount": 20.00, "currency": "USD", "confidence": 9}
+✅ Gym invoice: "PureGym membership invoice. See attached." → {"isSubscription": true, "serviceName": "PureGym", "amount": 150, "currency": "AED", "confidence": 8}
+✅ Service top-up: "You topped up fal.ai balance by $10.00" → {"isSubscription": true, "serviceName": "fal.ai", "amount": 10.00, "currency": "USD", "confidence": 9}
+❌ Bank notification: "Credit card payment CIF: ***45*** AED 1,500.00" → {"isSubscription": false, "serviceName": null, "amount": null, "currency": null, "confidence": 10}
 
-EXAMPLE 1 - GYM MEMBERSHIP WITH AMOUNT (SUBSCRIPTION):
-Subject: "PureGym membership invoice"
-Content: "Your monthly membership fee of AED 129.00 has been charged to your card ending in 1234. Membership valid until next month."
-→ isSubscription: true, amount: 129.00, currency: "AED", serviceName: "PureGym"
-
-EXAMPLE 2 - GYM MEMBERSHIP IN ATTACHMENT (SUBSCRIPTION):
-Subject: "PureGym membership invoice"
-Content: "Deduction notification from Pure Gym Dear Hussain, Please see your invoice in the attachments. If you have any questions about your subscription or billing, please get in touch."
-→ isSubscription: true, amount: 150.00, currency: "AED", serviceName: "PureGym" (estimated gym fee)
-
-EXAMPLE 3 - HOSTING RENEWAL (SUBSCRIPTION):
-Subject: "Your CDN Free subscription will be renewed in 3 days"
-Content: "You have an upcoming renewal for one of your subscriptions. Hello Hussain, You have an upcoming renewal for CDN service."
-→ isSubscription: true, amount: 0.99, currency: "USD", serviceName: "Namecheap CDN" (estimated basic hosting fee)
-
-EXAMPLE 4 - SERVICE TOP-UP (SUBSCRIPTION):
-Subject: "Payment Confirmation"
-Content: "Hi Hussain! You have successfully topped up your balance by $10.00. Best regards, team fal"
-→ isSubscription: true, amount: 10.00, currency: "USD", serviceName: "fal.ai"
-
-EXAMPLE 5 - LEONARDO SUBSCRIPTION (SUBSCRIPTION):
-Subject: "Your subscription to Leonardo Interactive PTY LTD"
-Content: "Your subscription confirmation. Thank you for choosing Leonardo Interactive PTY LTD! Your subscription will renew."
-→ isSubscription: true, amount: 9.45, currency: "USD", serviceName: "Leonardo Interactive"
-
-EXAMPLE 6 - WEBFLOW SUBSCRIPTION (SUBSCRIPTION):
-Subject: "Your Webflow plan has been renewed"
-Content: "Thank you for your payment. Your Webflow Site plan subscription of $14/month has been renewed and is active."
-→ isSubscription: true, amount: 14.00, currency: "USD", serviceName: "Webflow", category: "Web Services & Hosting"
-
-EXAMPLE 7 - ANTHROPIC CLAUDE (SUBSCRIPTION):
-Subject: "Claude Pro subscription payment"
-Content: "Your Claude Pro subscription for $20/month has been successfully charged. Thank you for using Claude!"
-→ isSubscription: true, amount: 20.00, currency: "USD", serviceName: "Anthropic Claude", category: "Software & Productivity"
-
-EXAMPLE 8 - PROMOTIONAL EMAIL (NOT SUBSCRIPTION):
-Subject: "50% off your next subscription!"
-Content: "Don't miss out! Get 50% off your first month. Click here to subscribe now!"
-→ isSubscription: false
-
-EXAMPLE 9 - BANK NOTIFICATION (NOT SUBSCRIPTION):
-Subject: "Credit card payment"
-Content: "A payment was processed on your credit card. Login to view details."
-→ isSubscription: false (generic bank notification, no service details)
-
-CATEGORIZATION GUIDE:
-- Entertainment & Media: Netflix, Disney+, Hulu, Prime Video, streaming services
-- Music & Audio: Spotify, Apple Music, Audible, podcast platforms
-- Software & Productivity: Microsoft Office, Adobe, Notion, Slack, Zoom, AI tools
-- Design & Creative: Canva, Figma, Creative Cloud, design tools
-- Web Services & Hosting: Namecheap, AWS, Webflow, domain/hosting services
-- Health & Fitness: PureGym, Peloton, fitness apps, gym memberships
-- Gaming: Steam, Xbox, PlayStation, game subscriptions
-- Education & Learning: Coursera, Udemy, online courses
-- Security & Privacy: VPN services, password managers, antivirus
-- Storage & Cloud: Dropbox, Google Drive, backup services
-- Communication: WhatsApp Business, Discord, communication tools
-- Food & Delivery: Uber Eats, meal kits, delivery services
-- Finance & Banking: QuickBooks, payment processors, financial tools
-- News & Magazines: NYT, WSJ, magazine subscriptions
-- Transportation: Uber, ride-sharing, transit passes
-- Business & Professional: Salesforce, CRM tools, business services
-- Shopping & Retail: Amazon Prime, membership clubs
-- Travel & Tourism: Booking platforms, travel services
-
-ANALYSIS INSTRUCTIONS:
-- Read the ENTIRE email content carefully
-- Look for specific monetary amounts and payment confirmations
-- Identify the service being paid for and assign appropriate category
-- For invoices in attachments, use service-specific estimates
-- Recognize subscription renewals even without amounts shown
-- Include service top-ups and credits as subscriptions
-- Distinguish between actual billing and promotional content
-- BE MORE AGGRESSIVE in detecting subscriptions - err on the side of inclusion
-- When in doubt about a service billing email, mark as subscription with estimated amount
-- Always assign the most specific and accurate category based on the service type`;
+ANALYSIS FOCUS:
+- Extract exact amounts when visible
+- Identify service name from sender/subject
+- Be decisive: subscription billing emails are usually clear
+- Estimate amounts only for confirmed subscription services without visible amounts`;
+  }
   }
 
   // Enhanced email content extraction
@@ -245,26 +150,15 @@ ANALYSIS INSTRUCTIONS:
     };
   }
 
-  // Enhanced user prompt with full email content
+  // Concise user prompt for faster analysis
   getUserPrompt(extracted) {
-    return `Analyze this complete email for subscription payment detection:
+    return `ANALYZE FOR SUBSCRIPTION:
 
-EMAIL DETAILS:
 Subject: ${extracted.subject}
 From: ${extracted.from}
-Date: ${extracted.date}
+Content: ${extracted.fullContent.substring(0, 1000)}${extracted.fullContent.length > 1000 ? '...' : ''}
 
-FULL EMAIL CONTENT:
-${extracted.fullContent}
-
-ANALYSIS REQUIREMENTS:
-1. Read the entire email content above
-2. Determine if this is a legitimate subscription payment
-3. Extract exact payment amount if present
-4. Identify the service being paid for
-5. Provide detailed reasoning for your decision
-
-Remember: Only mark as subscription if there's evidence of actual payment/billing. Respond with valid JSON only.`;
+IS THIS A SUBSCRIPTION PAYMENT/BILLING EMAIL? Extract service name and amount if yes. Respond with JSON only.`;
   }
 
   // Analyze a single email with enhanced content extraction
@@ -289,15 +183,15 @@ Remember: Only mark as subscription if there's evidence of actual payment/billin
             content: this.getUserPrompt(extracted)
           }
         ],
-        temperature: 0.1, // Low temperature for consistent results
-        max_tokens: 800, // Increased for detailed analysis
+        temperature: 0.1,
+        max_tokens: 300, // Reduced for faster response
         response_format: { type: "json_object" }
       });
 
       const response = completion.choices[0].message.content;
       const analysis = JSON.parse(response);
 
-      console.log(`AI Analysis Result: ${analysis.isSubscription ? 'SUBSCRIPTION' : 'NOT SUBSCRIPTION'} - ${analysis.serviceName || 'Unknown'} (Amount: ${analysis.amount ? `${analysis.currency} ${analysis.amount}` : 'None'}, Confidence: ${analysis.confidence}/10)`);
+      console.log(`AI Analysis Result: ${analysis.isSubscription ? 'SUBSCRIPTION' : 'NOT SUBSCRIPTION'} - ${analysis.serviceName || 'Unknown'} (Amount: ${analysis.amount ? `${analysis.currency || 'USD'} ${analysis.amount}` : 'None'}, Confidence: ${analysis.confidence}/10)`);
 
       return {
         ...analysis,
@@ -638,30 +532,26 @@ Remember: Only mark as subscription if there's evidence of actual payment/billin
       return null;
     }
 
-    // Use enhanced categorization if AI didn't provide category or provided generic category
-    let finalCategory = analysis.category;
-    if (!finalCategory || finalCategory === 'Other' || finalCategory === 'Software') {
-      finalCategory = this.getCategoryForService(analysis.serviceName);
-    }
+    // Use enhanced categorization
+    const finalCategory = this.getCategoryForService(analysis.serviceName);
 
     const subscription = {
-      type: analysis.type || 'subscription',
+      type: 'subscription',
       serviceName: analysis.serviceName,
       amount: analysis.amount,
       currency: analysis.currency || 'USD',
-      renewalDay: analysis.renewalDay || (analysis.nextRenewalDate ? new Date(analysis.nextRenewalDate).getDate() : new Date().getDate()),
-      nextRenewal: analysis.nextRenewalDate ? new Date(analysis.nextRenewalDate) : this.calculateNextRenewal(analysis.renewalDay),
+      renewalDay: new Date().getDate(),
+      nextRenewal: this.calculateNextRenewal(),
       category: finalCategory,
       description: analysis.description || `AI-detected: ${analysis.originalEmail.subject.substring(0, 50)}${analysis.originalEmail.subject.length > 50 ? '...' : ''}`,
-      confidence: analysis.confidence,
-      isMonthlyCharge: analysis.isMonthlyCharge,
+      confidence: analysis.confidence || 8,
+      isMonthlyCharge: true,
       subject: analysis.originalEmail.subject,
       from: analysis.originalEmail.from,
       date: new Date(analysis.originalEmail.date),
-      reasons: analysis.reasons,
       hasPaymentHistory: false,
-      hasConsistentRenewalDate: !!analysis.nextRenewalDate,
-      isRecurring: false,
+      hasConsistentRenewalDate: false,
+      isRecurring: true,
       paymentCount: 1
     };
 

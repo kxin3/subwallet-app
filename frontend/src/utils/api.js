@@ -168,44 +168,42 @@ export const disconnectGmailAccount = async (accountId) => {
   }
 };
 
-export const scanGmailAccount = async (accountId) => {
+export const scanGmailAccount = async (accountId, signal) => {
   console.log('API: Scanning Gmail account:', accountId);
-  console.log('API: Request URL:', `/gmail/accounts/${accountId}/scan`);
-  console.log('API: Full URL will be:', `${api.defaults.baseURL}/gmail/accounts/${accountId}/scan`);
-  console.log('API: Auth token present:', !!localStorage.getItem('token'));
   
   try {
-    console.log('API: Making scan request...');
-    console.log('API: Request details:', {
-      method: 'POST',
-      url: `/gmail/accounts/${accountId}/scan`,
-      baseURL: api.defaults.baseURL,
-      headers: api.defaults.headers
+    const response = await api.post(`/gmail/accounts/${accountId}/scan`, {}, {
+      signal: signal,
+      timeout: 300000 // 5 minute timeout
     });
-    
-    const response = await api.post(`/gmail/accounts/${accountId}/scan`);
     console.log('API: Scan success:', response.data);
     return response.data;
   } catch (error) {
+    if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+      const abortError = new Error('Scan was cancelled');
+      abortError.name = 'AbortError';
+      throw abortError;
+    }
+    
     console.error('API: Scan error:', error);
     console.error('API: Error response:', error.response?.data);
-    console.error('API: Error status:', error.response?.status);
-    console.error('API: Error config:', error.config);
-    console.error('API: Network error:', error.message);
-    
-    // Log specific network error details
-    if (error.code === 'ERR_NETWORK') {
-      console.error('API: Network error detected - server might be down or CORS issue');
-    }
-    if (error.response?.status === 404) {
-      console.error('API: 404 error - endpoint not found');
-    }
-    
     throw error;
   }
 };
 
-export const scanAllGmailAccounts = async () => {
-  const response = await api.post('/gmail/accounts/scan-all');
-  return response.data;
+export const scanAllGmailAccounts = async (signal) => {
+  try {
+    const response = await api.post('/gmail/accounts/scan-all', {}, {
+      signal: signal,
+      timeout: 600000 // 10 minute timeout for multiple accounts
+    });
+    return response.data;
+  } catch (error) {
+    if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+      const abortError = new Error('Scan was cancelled');
+      abortError.name = 'AbortError';
+      throw abortError;
+    }
+    throw error;
+  }
 };

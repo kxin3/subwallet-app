@@ -988,10 +988,85 @@ router.post('/accounts/:accountId/scan', auth, async (req, res) => {
 
     console.log(`Found ${uniqueMessages.length} unique potential subscription emails in ${account.email}`);
     
+    // Keyword pre-filtering function
+    const isLikelySubscriptionEmail = (subject, from) => {
+      const subjectLower = subject.toLowerCase();
+      const fromLower = from.toLowerCase();
+      
+      // High-priority subscription keywords in subject
+      const subscriptionKeywords = [
+        'payment', 'charged', 'invoice', 'receipt', 'billing', 'subscription', 
+        'renewal', 'monthly', 'annual', 'membership', 'plan upgraded', 'plan renewed',
+        'payment confirmation', 'payment successful', 'payment processed',
+        'your receipt', 'thank you for your payment', 'payment notification',
+        'auto-renewal', 'recurring payment', 'subscription active'
+      ];
+      
+      // Service provider keywords in from field
+      const serviceProviders = [
+        'noreply', 'billing', 'payment', 'support', 'accounts', 'no-reply',
+        'stripe', 'paypal', 'paddle', 'apple', 'google', 'microsoft',
+        'netflix', 'spotify', 'adobe', 'anthropic', 'openai', 'github',
+        'webflow', 'namecheap', 'puregym', 'leonardo', 'fal.ai', 'canva'
+      ];
+      
+      // Exclude promotional/marketing emails
+      const excludeKeywords = [
+        'newsletter', 'digest', 'update available', 'new feature', 'discount',
+        'sale', 'offer', 'promotion', 'free trial', 'get started', 'welcome to',
+        'verify your', 'confirm your', 'password', 'security alert', 'login',
+        'unsubscribe', 'preferences', 'settings', 'activate', 'setup'
+      ];
+      
+      // Check for exclusion keywords first
+      if (excludeKeywords.some(keyword => subjectLower.includes(keyword))) {
+        return false;
+      }
+      
+      // Check for subscription keywords in subject
+      const hasSubscriptionKeyword = subscriptionKeywords.some(keyword => 
+        subjectLower.includes(keyword)
+      );
+      
+      // Check for service provider in from field
+      const hasServiceProvider = serviceProviders.some(provider => 
+        fromLower.includes(provider)
+      );
+      
+      // Email is likely subscription if it has keywords OR comes from known providers
+      return hasSubscriptionKeyword || hasServiceProvider;
+    };
+    
     const emailData = [];
+    const filteredEmails = [];
 
-    // Process each message (limit to 100 for comprehensive analysis)
+    // First pass: Fetch and filter emails using keywords
+    console.log('Pre-filtering emails using keyword analysis...');
     for (const message of uniqueMessages.slice(0, 100)) {
+      try {
+        const messageData = await gmail.users.messages.get({
+          userId: 'me',
+          id: message.id,
+          format: 'metadata',
+          metadataHeaders: ['Subject', 'From', 'Date']
+        });
+
+        const headers = messageData.data.payload.headers;
+        const subject = headers.find(h => h.name === 'Subject')?.value || '';
+        const from = headers.find(h => h.name === 'From')?.value || '';
+        
+        if (isLikelySubscriptionEmail(subject, from)) {
+          filteredEmails.push(message);
+        }
+      } catch (error) {
+        console.error('Error pre-filtering email:', message.id, error.message);
+      }
+    }
+    
+    console.log(`Pre-filtering complete: ${filteredEmails.length}/${uniqueMessages.slice(0, 100).length} emails passed keyword filter`);
+
+    // Second pass: Fetch full content for filtered emails
+    for (const message of filteredEmails.slice(0, 50)) { // Limit to 50 for AI analysis
       try {
         const messageData = await gmail.users.messages.get({
           userId: 'me',
