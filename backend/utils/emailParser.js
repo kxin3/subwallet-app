@@ -475,15 +475,15 @@ const parseEmailForSubscription = (messageData) => {
     const serviceNameLower = serviceName.toLowerCase();
     
     if (['netflix', 'spotify', 'hulu', 'disney', 'youtube', 'amazon prime', 'prime video', 'twitch'].some(s => serviceNameLower.includes(s))) {
-      category = 'Entertainment';
+      category = 'Entertainment & Media';
     } else if (['adobe', 'figma', 'canva', 'office', 'microsoft', 'notion', 'trello', 'asana'].some(s => serviceNameLower.includes(s))) {
-      category = 'Productivity';
+      category = 'Software & Productivity';
     } else if (['github', 'aws', 'digital ocean', 'heroku', 'google cloud', 'azure', 'anthropic', 'openai'].some(s => serviceNameLower.includes(s))) {
-      category = 'Software';
+      category = 'Software & Productivity';
     } else if (['gym', 'fitness', 'yoga', 'peloton', 'puregym', 'membership'].some(s => serviceNameLower.includes(s)) || text.includes('membership')) {
       category = 'Health & Fitness';
     } else if (['namecheap', 'domain', 'hosting', 'cdn'].some(s => serviceNameLower.includes(s))) {
-      category = 'Web Services';
+      category = 'Web Services & Hosting';
     }
 
     // Final validation - ensure this looks like a legitimate subscription

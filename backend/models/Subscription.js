@@ -33,7 +33,30 @@ const subscriptionSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Entertainment', 'Productivity', 'Software', 'Gaming', 'Health & Fitness', 'Web Services', 'Other'],
+    enum: [
+      'Entertainment & Media',
+      'Software & Productivity', 
+      'Health & Fitness',
+      'Web Services & Hosting',
+      'Gaming',
+      'Education & Learning',
+      'Food & Delivery',
+      'Transportation',
+      'Finance & Banking',
+      'Communication',
+      'News & Magazines',
+      'Music & Audio',
+      'Video & Streaming',
+      'Design & Creative',
+      'Business & Professional',
+      'Security & Privacy',
+      'Storage & Cloud',
+      'Shopping & Retail',
+      'Utilities & Services',
+      'Travel & Tourism',
+      'Sports & Recreation',
+      'Other'
+    ],
     default: 'Other'
   },
   description: {
