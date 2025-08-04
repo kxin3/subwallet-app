@@ -68,7 +68,6 @@ ANALYSIS FOCUS:
 - Be decisive: subscription billing emails are usually clear
 - Estimate amounts only for confirmed subscription services without visible amounts`;
   }
-  }
 
   // Enhanced email content extraction
   extractEmailContent(emailData) {
