@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { connectGmail, connectGmailAccount } from '../utils/api';
+import { connectGmailAccount } from '../utils/api';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();

@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Settings as SettingsIcon, 
   Bell, 
   DollarSign, 
-  Globe, 
   Shield, 
   Trash2, 
   Save,
-  Eye,
-  EyeOff,
-  Mail,
-  Smartphone,
-  Calendar,
   Download,
   Upload,
   AlertTriangle

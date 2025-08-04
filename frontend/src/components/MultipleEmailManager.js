@@ -15,7 +15,6 @@ import toast from 'react-hot-toast';
 import { 
   getGmailAccounts, 
   getGmailAuthUrl, 
-  connectGmailAccount, 
   disconnectGmailAccount, 
   scanGmailAccount,
   scanAllGmailAccounts

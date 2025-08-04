@@ -1,7 +1,7 @@
 // frontend/src/components/CurrencySelector.js - Currency selection component
 import React from 'react';
 import { DollarSign } from 'lucide-react';
-import { getAvailableCurrencies, getCurrencySymbol } from '../utils/currency';
+import { getAvailableCurrencies } from '../utils/currency';
 
 const CurrencySelector = ({ selectedCurrency, onCurrencyChange, className = '' }) => {
   const currencies = getAvailableCurrencies();

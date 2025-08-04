@@ -29,11 +29,11 @@ const Dashboard = ({ user, onLogout }) => {
   const [displayCurrency, setDisplayCurrency] = useState('USD');
 
   // Simple modal reset function
-  const resetModalStates = useCallback(() => {
-    console.log('Resetting modal states');
-    setShowForm(false);
-    setEditingSubscription(null);
-  }, []);
+  // const resetModalStates = useCallback(() => {
+  //   console.log('Resetting modal states');
+  //   setShowForm(false);
+  //   setEditingSubscription(null);
+  // }, []);
 
   useEffect(() => {
     loadData();

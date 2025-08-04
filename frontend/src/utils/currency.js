@@ -135,7 +135,7 @@ export const updateExchangeRates = (newRates) => {
   Object.assign(EXCHANGE_RATES, newRates);
 };
 
-export default {
+const currencyExport = {
   convertCurrency,
   formatCurrency,
   convertSubscriptionCurrency,
@@ -145,3 +145,5 @@ export default {
   getCurrencySymbol,
   updateExchangeRates
 };
+
+export default currencyExport;

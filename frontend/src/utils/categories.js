@@ -150,9 +150,7 @@ export const SERVICE_CATEGORY_MAPPING = {
   'telegram': 'Communication',
   'signal': 'Communication',
   'discord': 'Communication',
-  'slack': 'Communication',
   'skype': 'Communication',
-  'zoom': 'Communication',
   
   // Food & Delivery
   'uber eats': 'Food & Delivery',
@@ -162,7 +160,7 @@ export const SERVICE_CATEGORY_MAPPING = {
   'deliveroo': 'Food & Delivery',
   'zomato': 'Food & Delivery',
   'talabat': 'Food & Delivery',
-  'careem': 'Food & Delivery',
+  'careem food': 'Food & Delivery',
   'meal kit': 'Food & Delivery',
   'hellofresh': 'Food & Delivery',
   'blue apron': 'Food & Delivery',
@@ -231,7 +229,7 @@ export const SERVICE_CATEGORY_MAPPING = {
   'midjourney': 'Design & Creative',
   
   // Shopping & Retail
-  'amazon prime': 'Shopping & Retail',
+  'amazon prime membership': 'Shopping & Retail',
   'costco': 'Shopping & Retail',
   'walmart': 'Shopping & Retail',
   'target': 'Shopping & Retail',
@@ -304,10 +302,12 @@ export const getAllCategories = () => SUBSCRIPTION_CATEGORIES;
  */
 export const getFormCategories = () => SUBSCRIPTION_CATEGORIES.filter(cat => cat !== 'all');
 
-export default {
+const categoriesExport = {
   SUBSCRIPTION_CATEGORIES,
   SERVICE_CATEGORY_MAPPING,
   getCategoryForService,
   getAllCategories,
   getFormCategories
 };
+
+export default categoriesExport;

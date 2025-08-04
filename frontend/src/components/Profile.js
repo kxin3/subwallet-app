@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Save, User, Mail, Calendar, Shield, Edit3, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { updateProfile, getUser } from '../utils/api';
+import { updateProfile } from '../utils/api';
 import Header from './Header';
 
 const Profile = ({ user, onUserUpdate, onLogout }) => {
