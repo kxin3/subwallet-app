@@ -48,7 +48,7 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'https://subwallet.up.railway.app',
   credentials: true
 }));
 
@@ -124,7 +124,7 @@ console.log(`Attempting to start server on port ${PORT}...`);
 const server = app.listen(PORT, () => {
   console.log(`✅ Server successfully running on port ${PORT}`);
   console.log(`🌐 API available at http://localhost:${PORT}`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'https://subwallet.up.railway.app'}`);
 });
 
 server.on('error', (err) => {

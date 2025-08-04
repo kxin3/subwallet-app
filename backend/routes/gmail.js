@@ -13,7 +13,7 @@ const router = express.Router();
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+  process.env.GOOGLE_REDIRECT_URI || 'https://subwallet.up.railway.app/auth/callback'
 );
 
 // Get Gmail auth URL
@@ -56,7 +56,7 @@ router.post('/callback', auth, async (req, res) => {
     const legacyOAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+      process.env.GOOGLE_REDIRECT_URI || 'https://subwallet.up.railway.app/auth/callback'
     );
 
     // Exchange code for tokens
@@ -799,7 +799,7 @@ router.post('/accounts/connect', auth, async (req, res) => {
     const newAccountOAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+      process.env.GOOGLE_REDIRECT_URI || 'https://subwallet.up.railway.app/auth/callback'
     );
 
     // Exchange code for tokens

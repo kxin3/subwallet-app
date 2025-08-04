@@ -2,7 +2,7 @@
 FROM node:18-alpine
 
 # Build argument for API URL
-ARG REACT_APP_API_URL=https://subwallet-app-production-114a.up.railway.app/api
+ARG REACT_APP_API_URL=https://subwallet.up.railway.app/api
 
 # Install system dependencies
 RUN apk add --no-cache curl
